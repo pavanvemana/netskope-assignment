@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from api import tickets
 from db.engine import Session
 from db.models import Ticket, SLA
+from sla_engine.tasks import process_sla_alerts
 
 app = FastAPI()
 
@@ -30,3 +31,8 @@ async def dashboard(limit: str, offset: str, sla_state: str = None,):
         for ticket in tickets:
             resp.append(ticket.get_info())
     return resp
+
+@app.get('/process_alerts')
+async def process_alerts():
+    process_sla_alerts.delay()
+    return 'Task queued'

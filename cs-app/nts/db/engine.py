@@ -11,7 +11,7 @@ host = os.getenv('DB_HOST', 'db')
 database_url = f"postgresql+psycopg2://{username}:{password}@{host}:5432/customer_support"
 
 # Create the SQLAlchemy engine
-engine = create_engine(database_url, echo=True)
+engine = create_engine(database_url)
 
 Session = sessionmaker(bind=engine)
 

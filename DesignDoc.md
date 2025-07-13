@@ -28,13 +28,12 @@ Please go to the mentioned endpoint once app is launched
 Current app can be treated as just an enhanced MVP for the requirements. Future improvements may include
 
 - Adding authentication
+- Adding structured logging
 - Improving DB query time and transaction rollback in case failures
 - Revising DB Schema based on requirement changes
 - Pen Testing and identifiying Sec loop holes
 - Adding Unit tests and Integration tests
 - Adding more doc string and comments to explain workflow 
-- Adding background scheduler using Celery and redis to send alerts
-  in case of SLA breach
 - Adding AI assistance for support execs
 
 

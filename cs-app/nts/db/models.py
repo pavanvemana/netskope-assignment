@@ -3,7 +3,7 @@ import traceback
 
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship
 from db.engine import Session
 
@@ -41,11 +41,13 @@ class Ticket(Base):
                 ticket = cls(**kwargs)
                 session.add(ticket)
                 session.commit()
+            return True
         except sqlalchemy.exc.IntegrityError:
             print('Duplicate request/record')
         except Exception as error:
             print('An uknown error occured while creating ticket')
             print(traceback.format_exc())
+        return False
     
     @classmethod
     def update(cls, kwargs):
@@ -111,10 +113,15 @@ class SLA(Base):
         backref="ticket_sla", 
         cascade="all, delete-orphan"
     )
-    
+    sla_alerts = relationship(
+        "SLAAlert",
+        backref="ticket_sla",
+        cascade="all, delete-orphan"
+    )
+
 
     def __repr__(self):
-        return f"<TicketStatusHistory(ticket_id={self.ticket_id}, type='{self.sla_type}', from='{self.sla_start_time}', to='{self.sla_target_time}')>"
+        return f"<SLA(ticket_id={self.ticket_id}, type='{self.sla_type}', from='{self.sla_start_time}', to='{self.sla_target_time}')>"
     
     # Maintain idempotency to avoid duplicate updates
     __table_args__ = (
@@ -137,7 +144,6 @@ class SLA(Base):
         
         if paused_start:
             total_paused_time += datetime.now(UTC) - paused_start
-        print(total_paused_time)
         return total_paused_time
     
 
@@ -146,7 +152,7 @@ class SLA(Base):
         remaining_time = self.sla_target_time - (self.sla_start_time + active_time)
         if remaining_time.total_seconds() < 0:
             return timedelta(0)
-        return f'{round(remaining_time.total_seconds()/60, 1)} Minutes'
+        return round(remaining_time.total_seconds()/60, 1)
 
 
 class SLAHistory(Base):
@@ -160,5 +166,22 @@ class SLAHistory(Base):
     changed_by = Column(String, nullable=True)
 
     def __repr__(self):
-        return f"<TicketStatusHistory(sla_id={self.sla_id}, from='{self.old_status}', to='{self.new_status}', at='{self.changed_at}')>"
+        return f"<SLAHistory(sla_id={self.sla_id}, from='{self.old_status}', to='{self.new_status}', at='{self.changed_at}')>"
+
+
+class SLAAlert(Base):
+    __tablename__ = 'ticket_sla_alert'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sla_id = Column(Integer, ForeignKey('ticket_sla.id'), nullable=False)
+    alert_type = Column(String, nullable=False)
+    generated_at = Column(DateTime(timezone=True), default=datetime.now(UTC))
+    is_sent = Column(Boolean, default=False)
+
+    def __repr__(self):
+        return f"<SLAAlert(sla_id={self.sla_id}, type='{self.alert_type}, sent={self.is_sent})"
+
+    # Maintain idempotency to avoid duplicate updates
+    __table_args__ = (
+        UniqueConstraint('sla_id', 'alert_type', name='sla_alert_unique'),
+    )
 

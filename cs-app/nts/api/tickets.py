@@ -27,7 +27,7 @@ async def get_tickets(ticket_id):
 async def create_tickets(request: Request):
     tickets = await request.json()
     for ticket in tickets:
-        Ticket.create(ticket)
+        is_created = Ticket.create(ticket)
     return JSONResponse({'message': 'created'}, status_code=201)
 
 
@@ -39,4 +39,3 @@ async def update_tickets(request: Request):
         update_status = Ticket.update(ticket)
         resp[ticket['id']] = update_status
     return resp
-

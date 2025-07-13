@@ -79,6 +79,7 @@ def after_ticket_creation(mapper, connection, target):
             ticket_id = target.id,
             status = SLAStates.ACTIVE.value,
             sla_type = SLAClock.RESPONSE.value,
+            sla_start_time = datetime.now(UTC),
             sla_target_time = datetime.now(UTC) + timedelta(minutes=sla_targets.get('response')),
         )
         session.add(response_sla)
@@ -87,6 +88,7 @@ def after_ticket_creation(mapper, connection, target):
             ticket_id = target.id,
             status = SLAStates.ACTIVE.value,
             sla_type = SLAClock.RESOLUTION.value,
+            sla_start_time = datetime.now(UTC),
             sla_target_time = datetime.now(UTC) + timedelta(minutes=sla_targets.get('resolution')),
         )
         session.add(resolution_sla)

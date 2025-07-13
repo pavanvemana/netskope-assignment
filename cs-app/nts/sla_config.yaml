@@ -2,8 +2,8 @@
 ---
 CASB:
   P0: 
-    response: 10
-    resolution: 60
+    response: 2
+    resolution: 5
   P1: 
     response: 15
     resolution: 240

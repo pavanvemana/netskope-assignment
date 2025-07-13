@@ -15,6 +15,32 @@ services:
       - "5432:5432"
     networks:
       - nts
+  
+  redis:
+    image: redis:latest
+    container_name: task-broker
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - nts
+  
+  sla_engine:
+    image: nts
+    command: celery -A sla_engine.tasks worker -B --loglevel=info
+    links:
+      - redis
+    depends_on:
+      - redis
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      SLACK_WEB_HOOK: ${SLACK_WEB_HOOK}
+    volumes:
+      - ./nts:/nts
+    networks:
+      - nts
     
   app:
     image: nts
@@ -27,6 +53,7 @@ services:
       - ./nts:/nts
     depends_on:
      - db
+     - redis
     environment:
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
@@ -37,6 +64,7 @@ services:
   
 volumes:
   postgres:
+  redis_data:
 
 networks:
   nts:
