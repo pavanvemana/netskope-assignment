@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres
+    build:
+      context: ./docker
+      dockerfile: postgres.Dockerfile
+    restart: always
+    # set shared memory limit when using docker compose
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: netskope@123
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - nts
+    
+  app:
+    image: nts
+    build:
+      context: ./nts
+      dockerfile: Dockerfile
+    links:
+      - db
+    volumes:
+      - ./nts:/nts
+    depends_on:
+     - db
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+    ports:
+      - "8000:8000"
+    networks:
+      - nts
+  
+volumes:
+  postgres:
+
+networks:
+  nts:
+    driver: bridge
